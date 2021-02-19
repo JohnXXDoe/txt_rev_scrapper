@@ -51,9 +51,9 @@ def get_data(uid):
     no_pages = 1
     flag = False
     while flag is False:
-        if no_pages % 2 is 0:  # To sleep for avoiding timeouts
-            print('SLEEPING FOR : ' + str(no_pages*60) + 'SECONDS. ||| PAGE NUMBER - ' + str(no_pages) + ' |||' )
-            tm.sleep(60*no_pages)
+        if no_pages % 3 is 0:  # To sleep for avoiding timeouts
+            print('SLEEPING FOR : ' + str((no_pages/3)*20) + ' SECONDS. ||| PAGE NUMBER - ' + str(no_pages) + ' |||')
+            tm.sleep(20*(no_pages/3))
         print('PAGE NUMBER: ' + str(no_pages))
         hedr = random.choice(headerss)
         headers = {"User-Agent": hedr,
@@ -183,8 +183,8 @@ def get_data(uid):
 
 for t in range(1, len(asin) - 1):  # len(asin) - 1
     if t % 100 is 0:
-        print('SLEEPING FOR : ' + str(400) + 'SECONDS')
-        tm.sleep(400)
+        print('SLEEPING FOR : ' + str(1800/60) + 'MINUTES')
+        tm.sleep(1800)
     print('|||||||| PRODUCT NO : ' + str(t) + ' ||||||||')
     unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls = get_data(asin[t])
     if cus_name != '100':
