@@ -49,14 +49,13 @@ def get_data(uid):
     no_pages = 1
     flag = False
     while flag is False:
-
+        print('PAGE NUMBER: ' + str(no_pages))
         hedr = random.choice(headerss)
-        print(hedr)
         headers = {"User-Agent": hedr,
                    "Accept-Encoding": "gzip, deflate",
                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "DNT": "1",
                    "Connection": "close", "Upgrade-Insecure-Requests": "1"}
-        tm.sleep(2)
+        tm.sleep(3)
         session = requests.Session()
         session.verify = False
         retry = Retry(connect=3, backoff_factor=0.5)
@@ -65,6 +64,7 @@ def get_data(uid):
         session.mount('https://', adapter)
         r = session.get('https://www.amazon.in/product-reviews/' + str(uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages),
                         headers=headers)  # , proxies=proxies) : ASIN example - B01L7C4IU2
+        print('https://www.amazon.in/product-reviews/' + str(uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
         content = r.content
         soup = BeautifulSoup(content)
 
@@ -83,7 +83,7 @@ def get_data(uid):
                 url.append(' ')
                 likes.append(' ')
 
-                tm.sleep(2)
+                tm.sleep(3)
                 container = soup.find('div', attrs={'id': 'cm_cr-review_list',
                                                     'class': 'a-section a-spacing-none review-views celwidget'})    # Whole review container
                 if container is not None:
@@ -103,7 +103,12 @@ def get_data(uid):
                             like = r.find('span', attrs={'class': 'a-size-base a-color-tertiary cr-vote-text',
                                                           'data-hook': 'helpful-vote-statement'})
                             if like is not None:
-                                likes.append(like.text.strip())
+                                temp1 = like.text.strip()
+                                temp = temp1.split(' ')
+                                if temp[0] == ('One'):
+                                    likes.append(1)
+                                else:
+                                    likes.append(temp[0])
                             else:
                                 likes.append(0)
 
@@ -117,7 +122,7 @@ def get_data(uid):
                             print('================== Getting data for ' + cus + ' ==================')
                             ratings.append(clean[0])
                             reviews.append(review)
-                            dates.append(q_date)
+                            dates.append(q_date.strftime("%d %b %Y"))
                             c_names.append(cus)
                             url.append('https://www.amazon.in' + link)
                             uids.append(' ')
@@ -140,24 +145,23 @@ def get_data(uid):
                 return uids, str('ERROR'), 0, str('404'), 0, 0, str('NA'), url
 
             # --------------------------------------- PAGE CONCEPT HERE ---------------------------------------
-            tm.sleep(2)
+            tm.sleep(3)
             if soup.find('li', attrs={'class': 'a-disabled a-last'}):
                 flag = True
                 print('//////END OF PAGES///////')
-            tm.sleep(2)
+                return uids, p_names, likes, c_names, dates, ratings, reviews, url
+            tm.sleep(5)
             if soup.find('li', attrs={'class': 'a-last'}):  # Check if there are more pages?
-
                 no_pages += 1
             else:
                 print('SINGLE PAGE ONLY')
                 return uids, p_names, likes, c_names, dates, ratings, reviews, url
-            return uids, p_names, likes, c_names, dates, ratings, reviews, url
 
         except requests.exceptions.ConnectionError:
             print('Connection refused')
 
 
-for t in range(1, 50):  # len(asin) - 1
+for t in range(1, len(asin) - 1):  # len(asin) - 1
     print('|||||||| PRODUCT NO : ' + str(t - 1) + ' ||||||||')
     unique, product_name, likess, cus_name, datess, ratingss, reviewss, urls = get_data(asin[t])
     dict = {'ASIN': unique, 'Product Name': product_name, 'Likes': likess, 'Customer Name': cus_name,
