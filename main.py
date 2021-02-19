@@ -9,7 +9,9 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+
 headerss = []
+titles = []  # Title of the review
 likes = []  # No of likes on the review
 p_names = []  # product name
 c_names = []  # customer name
@@ -49,6 +51,9 @@ def get_data(uid):
     no_pages = 1
     flag = False
     while flag is False:
+        if no_pages % 2 is 0:  # To sleep for avoiding timeouts
+            print('SLEEPING FOR : ' + str(no_pages*60) + 'SECONDS. ||| PAGE NUMBER - ' + str(no_pages) + ' |||' )
+            tm.sleep(60*no_pages)
         print('PAGE NUMBER: ' + str(no_pages))
         hedr = random.choice(headerss)
         headers = {"User-Agent": hedr,
@@ -62,9 +67,11 @@ def get_data(uid):
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
         session.mount('https://', adapter)
-        r = session.get('https://www.amazon.in/product-reviews/' + str(uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages),
+        r = session.get('https://www.amazon.in/product-reviews/' + str(
+            uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages),
                         headers=headers)  # , proxies=proxies) : ASIN example - B01L7C4IU2
-        print('https://www.amazon.in/product-reviews/' + str(uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
+        print('https://www.amazon.in/product-reviews/' + str(
+            uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
         content = r.content
         soup = BeautifulSoup(content)
 
@@ -76,6 +83,7 @@ def get_data(uid):
                 name = name_p.text.strip()  # fetch name of product
                 p_names.append(name)
                 uids.append(uid)
+                titles.append(' ')
                 ratings.append(' ')
                 reviews.append(' ')
                 dates.append(' ')
@@ -85,7 +93,7 @@ def get_data(uid):
 
                 tm.sleep(3)
                 container = soup.find('div', attrs={'id': 'cm_cr-review_list',
-                                                    'class': 'a-section a-spacing-none review-views celwidget'})    # Whole review container
+                                                    'class': 'a-section a-spacing-none review-views celwidget'})  # Whole review container
                 if container is not None:
                     for r in container.findAll('div',
                                                attrs={'data-hook': 'review', 'class': 'a-section review aok-relative'}):
@@ -97,11 +105,13 @@ def get_data(uid):
                         # print(formatted)
                         q_date = dt.strptime(dte, '%d %B %Y')  # Convert string to Date
                         if (curr_dat - day_diff) <= q_date:
+                            t_title = r.find('a', attrs={'data-hook': "review-title"}, href=True)
+                            title = t_title.find('span').text.strip()
                             cus = r.find('span', attrs={'class': 'a-profile-name'}).text.strip()
                             text_div = r.find('div', attrs={'class': 'a-row a-spacing-small review-data'})
                             review = text_div.find('span').text.strip()
                             like = r.find('span', attrs={'class': 'a-size-base a-color-tertiary cr-vote-text',
-                                                          'data-hook': 'helpful-vote-statement'})
+                                                         'data-hook': 'helpful-vote-statement'})
                             if like is not None:
                                 temp1 = like.text.strip()
                                 temp = temp1.split(' ')
@@ -120,6 +130,7 @@ def get_data(uid):
                             clean = rating.split(' ')
 
                             print('================== Getting data for ' + cus + ' ==================')
+                            titles.append(title)
                             ratings.append(clean[0])
                             reviews.append(review)
                             dates.append(q_date.strftime("%d %b %Y"))
@@ -132,17 +143,26 @@ def get_data(uid):
 
                         elif q_date < (curr_dat - day_diff):
                             print('Date Expired')
-                            return uids, p_names, likes,  c_names, dates, ratings, reviews, url
+                            return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
                 else:
-                    print(container)
                     print(name)
+                    c_names.append('100')
                     print("================ NO REVIEWS ================")
-                    return uids, p_names, 0, 'NA', 0, 0, 'NA', url
+                    return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
             else:
                 print("************** PAGE DOES NOT EXIST **************")
-                print('https://www.amazon.in/product-reviews/' + str(uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
+                print('https://www.amazon.in/product-reviews/' + str(
+                    uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
                 print(name_p)
-                return uids, str('ERROR'), 0, str('404'), 0, 0, str('NA'), url
+                likes.append('0')
+                ratings.append('0')
+                reviews.append('PAGE DOES NOT EXIST')
+                dates.append('NA')
+                c_names.append('= ERROR - 404 =')
+                url.append('https://www.amazon.in/dp' + uid)
+                uids.append(uid)
+                p_names.append(' ')
+                return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
 
             # --------------------------------------- PAGE CONCEPT HERE ---------------------------------------
             tm.sleep(3)
@@ -162,10 +182,15 @@ def get_data(uid):
 
 
 for t in range(1, len(asin) - 1):  # len(asin) - 1
-    print('|||||||| PRODUCT NO : ' + str(t - 1) + ' ||||||||')
-    unique, product_name, likess, cus_name, datess, ratingss, reviewss, urls = get_data(asin[t])
-    dict = {'ASIN': unique, 'Product Name': product_name, 'Likes': likess, 'Customer Name': cus_name,
-            'Question Date': datess, 'Rating': ratingss, 'Review': reviewss, 'URL': urls}
+    if t % 100 is 0:
+        print('SLEEPING FOR : ' + str(400) + 'SECONDS')
+        tm.sleep(400)
+    print('|||||||| PRODUCT NO : ' + str(t) + ' ||||||||')
+    unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls = get_data(asin[t])
+    if cus_name != '100':
+        dict = {'ASIN': unique, 'Product Name': product_name, 'Customer Name': cus_name,
+                'Question Date': datess, 'Title': titless, 'Rating': ratingss,
+                'Review': reviewss,'Likes': likess, 'URL': urls}
 
 df = pd.DataFrame(dict)
 
