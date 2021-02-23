@@ -1,7 +1,16 @@
 import csv
+import random
+import smtplib
+import ssl
 import time as tm
 from datetime import datetime as dt
 from datetime import timedelta
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.headerregistry import Address
+
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import random
@@ -9,7 +18,9 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+# Email headers
 
+receiver_email = []
 headerss = []
 titles = []  # Title of the review
 likes = []  # No of likes on the review
@@ -21,19 +32,25 @@ reviews = []  # total reviews
 uids = []  # ASIN numbers of the prodcuts
 asin = []
 url = []
-# Reading ASIN Unique codes from CSV file
-with open('./headers.csv') as csv_file:
+
+with open('./headers.csv') as csv_file:  # Read headers for avoiding IP timeout
     reader2 = csv.reader(csv_file, delimiter='\n')
     for col in reader2:
         header = col[0]
         headerss.append(header)
 
-with open('./asin.csv') as csv_file:
+with open('./asin.csv') as csv_file:  # Read Asin values from the csv
     reader = csv.reader(csv_file, delimiter=',')
     for col in reader:
         asin_t = col[1]
         asin.append(asin_t)
     time_prd = asin[len(asin) - 1]
+
+with open('./contacts_file.csv') as file:  # Read emailIDs for the automated mail response
+    reader = csv.reader(file, delimiter='\n')
+    next(reader)  # Skip header row
+    for email in reader:
+        receiver_email.append(email[0])
 
 curr_dat = dt.today()  # Current system date
 day_diff = timedelta(int(time_prd))
@@ -51,9 +68,10 @@ def get_data(uid):
     no_pages = 1
     flag = False
     while flag is False:
-        if no_pages % 3 is 0:  # To sleep for avoiding timeouts
-            print('SLEEPING FOR : ' + str((no_pages/3)*20) + ' SECONDS. ||| PAGE NUMBER - ' + str(no_pages) + ' |||')
-            tm.sleep(20*(no_pages/3))
+        if no_pages % 2 is 0:  # To sleep for avoiding timeouts
+            print(
+                'SLEEPING FOR : ' + str((no_pages / 2) * 6) + ' SECONDS. ||| PAGE NUMBER - ' + str(no_pages) + ' |||')
+            tm.sleep(4 * (no_pages / 2))
         print('PAGE NUMBER: ' + str(no_pages))
         hedr = random.choice(headerss)
         headers = {"User-Agent": hedr,
@@ -63,23 +81,26 @@ def get_data(uid):
         tm.sleep(3)
         session = requests.Session()
         session.verify = False
-        retry = Retry(connect=3, backoff_factor=0.5)
+        retry = Retry(connect=500, backoff_factor=1)
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
         session.mount('https://', adapter)
-        r = session.get('https://www.amazon.in/product-reviews/' + str(
-            uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages),
-                        headers=headers)  # , proxies=proxies) : ASIN example - B01L7C4IU2
-        print('https://www.amazon.in/product-reviews/' + str(
-            uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
-        content = r.content
-        soup = BeautifulSoup(content)
-
         try:
+            r = session.get('https://www.amazon.in/product-reviews/' + str(
+                uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages),
+                            #verify='./amzn_certi.cer',
+                            headers=headers)  # , proxies=proxies) : ASIN example - B01L7C4IU2
+            print('https://www.amazon.in/product-reviews/' + str(
+                uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
+            content = r.content
+            soup = BeautifulSoup(content)
+
             name_p = soup.find('a',
                                attrs={'class': 'a-link-normal',
                                       'data-hook': 'product-link'}, href=True)
-            if name_p is not None:
+            container = soup.find('div', attrs={'id': 'cm_cr-review_list',
+                                                'class': 'a-section a-spacing-none review-views celwidget'})  # Whole review container
+            if name_p or container is not None:
                 name = name_p.text.strip()  # fetch name of product
                 p_names.append(name)
                 uids.append(uid)
@@ -92,8 +113,7 @@ def get_data(uid):
                 likes.append(' ')
 
                 tm.sleep(3)
-                container = soup.find('div', attrs={'id': 'cm_cr-review_list',
-                                                    'class': 'a-section a-spacing-none review-views celwidget'})  # Whole review container
+
                 if container is not None:
                     for r in container.findAll('div',
                                                attrs={'data-hook': 'review', 'class': 'a-section review aok-relative'}):
@@ -169,29 +189,92 @@ def get_data(uid):
             if soup.find('li', attrs={'class': 'a-disabled a-last'}):
                 flag = True
                 print('//////END OF PAGES///////')
-                return uids, p_names, likes, c_names, dates, ratings, reviews, url
+                return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
             tm.sleep(5)
             if soup.find('li', attrs={'class': 'a-last'}):  # Check if there are more pages?
                 no_pages += 1
             else:
                 print('SINGLE PAGE ONLY')
-                return uids, p_names, likes, c_names, dates, ratings, reviews, url
+                return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
 
         except requests.exceptions.ConnectionError:
-            print('Connection refused')
+            dict = {'ASIN': uids, 'Product Name': p_names, 'Customer Name': c_names,
+                    'Question Date': dates, 'Title': titles, 'Rating': ratings,
+                    'Review': reviews, 'Likes': likes, 'URL': url}
+            df = pd.DataFrame(dict)
+            df.to_csv('./exeption.csv', index=False, encoding='utf-8')
+            print('////////////////////////////////// Connection refused - ' + str(
+                dt.today()) + ' //////////////////////////////////')
+        except ssl.SSLCertVerificationError:
+            print('////////////////////////////////// SSL Cerificate ISSUE - ' + str(
+                dt.today()) + ' //////////////////////////////////')
+
+
+def send_mail(receiver):
+    sender_email = 'utkarsh.kharayat@havells.com'
+    subject = "*AUTOMATED* Daily Amazon report *TEST*"
+    body = """
+    <html>
+      <body style="text-align: center; color: red;">
+        <p>************ Automated Mail for daily Amazon customer feedback ************<br>
+           Find attached CSV file.<br><br>
+           *****    DO     -   NOT   -    REPLY   *****
+        </p>
+      </body>
+    </html>
+    """
+    message = MIMEMultipart()
+    message["From"] = Address('Utkarsh Karayat', 'utkarsh.kharayat', 'havells.com')
+    message["To"] = sender_email
+    message["Subject"] = subject
+    # message["BCC"] = receiver
+
+    message.attach(MIMEText(body, "html"))
+    filename = "reviews.csv"
+    with open(filename, "rb") as attachment:
+        # Add file as application/octet-stream
+        # Email client can usually download this automatically as attachment
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(attachment.read())
+    # Encode file in ASCII characters to send by email
+    encoders.encode_base64(part)
+    # Add header as key/value pair to attachment part
+    part.add_header(
+        "Content-Disposition",
+        f"attachment; filename= {filename}",
+    )
+
+    # Add attachment to message and convert message to string
+    message.attach(part)
+    text = message.as_string()
+
+    # Create a secure SSL context
+    context = ssl.create_default_context()
+    with smtplib.SMTP('smtp.havells.com', 2521) as server:
+        server.ehlo()  # Can be omitted
+        server.starttls(context=context)
+        server.ehlo()  # Can be omitted
+        server.sendmail(sender_email, receiver, text)  # server.sendmail(text)
 
 
 for t in range(1, len(asin) - 1):  # len(asin) - 1
-    if t % 100 is 0:
-        print('SLEEPING FOR : ' + str(1800/60) + 'MINUTES')
-        tm.sleep(1800)
+    if t % 2 == 0:
+        print('SLEEPING FOR : ' + str(360 / 60) + 'MINUTES')
+        tm.sleep(360)
     print('|||||||| PRODUCT NO : ' + str(t) + ' ||||||||')
     unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls = get_data(asin[t])
     if cus_name != '100':
         dict = {'ASIN': unique, 'Product Name': product_name, 'Customer Name': cus_name,
                 'Question Date': datess, 'Title': titless, 'Rating': ratingss,
-                'Review': reviewss,'Likes': likess, 'URL': urls}
+                'Review': reviewss, 'Likes': likess, 'URL': urls}
 
 df = pd.DataFrame(dict)
-
 df.to_csv('./reviews.csv', index=False, encoding='utf-8')
+
+receiver = []
+for t in range(0, len(receiver_email) - 1):  # len(asin) - 1
+    print('|||||||| SENDING MAIL TO : ' + str(receiver_email[t]) + ' ||||||||')
+    receiver.append(receiver_email[t]), receiver.append(',')
+receiver.append(receiver_email[len(receiver_email)])
+
+send_mail(receiver)
