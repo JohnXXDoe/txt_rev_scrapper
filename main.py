@@ -310,7 +310,7 @@ def exception_mail(receiver):
             server.sendmail(sender_email, destination, text)  # server.sendmail(text)
 
 try:
-    for t in range(1, 3):  # len(asin) - 1
+    for t in range(1, len(asin) - 1):  # len(asin) - 1
         if t % 2 == 0:
             print('SLEEPING FOR : ' + str(4) + ' Seconds')
             tm.sleep(4)
@@ -321,6 +321,8 @@ try:
             dict = {'ASIN': unique, 'Product Name': product_name, 'Customer Name': cus_name,
                     'Question Date': datess, 'Title': titless, 'Rating': ratingss,
                     'Review': reviewss, 'Likes': likess, 'URL': urls}
+    df = pd.DataFrame(dict)
+    df.to_csv('./questions.csv', index=False, encoding='utf-8')
 
     for t in range(1, len(receiver_email)):  # len(asin) - 1
         print('|||||||| SENDING MAIL TO : ' + str(receiver_email[t]) + ' ||||||||')
@@ -337,6 +339,5 @@ except requests.exceptions.ConnectionError:
 except ssl.SSLCertVerificationError:
     print('////////////////////////////////// SSL Cerificate ISSUE - ' + str(
         dt.today()) + ' //////////////////////////////////')
-df = pd.DataFrame(dict)
-df.to_csv('./questions.csv', index=False, encoding='utf-8')
+
 
