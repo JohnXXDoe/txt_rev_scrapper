@@ -20,7 +20,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)  # Suppress insecure warning
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)  # Suppress insecure warning
 # Email headers
 
 receiver_email = []
@@ -36,7 +37,8 @@ uids = []  # ASIN numbers of the prodcuts
 asin = []
 url = []
 
-with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/headers.csv') as csv_file:  # Read headers for avoiding IP timeout
+with open(
+        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/headers.csv') as csv_file:  # Read headers for avoiding IP timeout
     reader2 = csv.reader(csv_file, delimiter='\n')
     for col in reader2:
         header = col[0]
@@ -49,7 +51,8 @@ with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/asin.csv') as csv_fil
         asin.append(asin_t)
     time_prd = asin[len(asin) - 1]
 
-with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/contacts_file.csv') as file:  # Read emailIDs for the automated mail response
+with open(
+        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/contacts_file.csv') as file:  # Read emailIDs for the automated mail response
     reader = csv.reader(file, delimiter='\n')
     next(reader)  # Skip header row
     for email in reader:
@@ -84,14 +87,14 @@ def get_data(uid):
         tm.sleep(3)
         session = requests.Session()
         session.verify = False
-        retry = Retry(connect=1500, backoff_factor=1)
+        retry = Retry(connect=3000, backoff_factor=1)
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
         session.mount('https://', adapter)
 
         r = session.get('https://www.amazon.in/product-reviews/' + str(
             uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages),
-                        #verify='./amzn_certi.cer',
+                        # verify='./amzn_certi.cer',
                         headers=headers)  # , proxies=proxies) : ASIN example - B01L7C4IU2
         print('https://www.amazon.in/product-reviews/' + str(
             uid) + '?ie=UTF8&reviewerType=all_reviews&sortBy=recent&pageNumber=' + str(no_pages))
@@ -206,10 +209,7 @@ def get_data(uid):
             return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
 
 
-
-
 def send_mail(receiver):
-
     sender_email = 'utkarsh.kharayat@havells.com'
     subject = "*AUTOMATED* Daily Amazon report *TEST*"
     body = """
@@ -217,6 +217,9 @@ def send_mail(receiver):
       <body style="text-align: center; color: blue;">
         <p>************ Automated Mail for daily Amazon feedback ************<br>
            Find attached CSV files.<br><br>
+           Questions    -   30 Days
+           Reviews      -   07 Days
+           Ratings      -   N/A
            *****    DO     -   NOT   -    REPLY   *****
         </p>
       </body>
@@ -261,14 +264,17 @@ def send_mail(receiver):
             server.ehlo()  # Can be omitted
             server.sendmail(sender_email, destination, text)  # server.sendmail(text)
 
+
 def exception_mail(receiver):
+    print('++++++++++++++++++++++++++ EXCEPTION MAIL TRIGGERED - ' + str(
+        dt.today()) + ' ++++++++++++++++++++++++++')
     sender_email = 'utkarsh.kharayat@havells.com'
-    subject = "*AUTOMATED* Exception occurred *TEST*"
+    subject = "*AUTOMATED* Exception occurred - Reviews"
     body = """
     <html>
       <body style="text-align: center; color: red;">
         <p>************ Automated Mail for Exception ************<br>
-           Exception occurred while running Review scraping.<br><br>
+           Exception occurred while executing Review Scraper.<br><br>
            *****    DO     -   NOT   -    REPLY   *****
         </p>
       </body>
@@ -314,6 +320,7 @@ def exception_mail(receiver):
             server.ehlo()  # Can be omitted
             server.sendmail(sender_email, destination, text)  # server.sendmail(text)
 
+
 try:
     for t in range(1, len(asin) - 1):  # len(asin) - 1
         if t % 10 == 0:
@@ -331,7 +338,7 @@ try:
         '=============================================            PRINTING FILE       =============================================')
     df.to_csv('C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv', index=False, encoding='utf-8')
 
-    for t in range(0, len(receiver_email)-1):  # len(asin) - 1
+    for t in range(0, len(receiver_email) - 1):  # len(asin) - 1
         print('|||||||| SENDING MAIL TO : ' + str(receiver_email[t]) + ' ||||||||')
     send_mail(receiver_email)
 
@@ -341,10 +348,9 @@ except requests.exceptions.ConnectionError:
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
     mailid = ['utkarsh.kharayat@havells.com',
-              'arush.agarwal@havells.com']
+              'arush.agarwal@havells.com',
+              'atulkumar.bhatia@havells.com']
     exception_mail(mailid)  # Send Exception mail
 except ssl.SSLCertVerificationError:
     print('////////////////////////////////// SSL Cerificate ISSUE - ' + str(
         dt.today()) + ' //////////////////////////////////')
-
-
