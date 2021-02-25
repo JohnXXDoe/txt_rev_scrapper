@@ -190,7 +190,7 @@ def get_data(uid):
             reviews.append('PAGE DOES NOT EXIST')
             dates.append('NA')
             c_names.append('= ERROR - 404 =')
-            url.append('https://www.amazon.in/dp' + uid)
+            url.append('https://www.amazon.in/dp/' + uid)
             uids.append(uid)
             p_names.append('NA')
             return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
