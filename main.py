@@ -20,6 +20,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)  # Suppress insecure warning
 # Email headers
 
 receiver_email = []
@@ -72,7 +73,7 @@ def get_data(uid):
     while flag is False:
         if no_pages % 2 == 0:  # To sleep for avoiding timeouts
             print(
-                'SLEEPING FOR : ' + str((no_pages / 2) * 20) + ' SECONDS.')
+                'SLEEPING FOR : ' + str((no_pages / 2) * 10) + ' SECONDS.')
             tm.sleep(20 * (no_pages / 2))
         print(' ||| PAGE NUMBER - ' + str(no_pages) + ' |||')
         hedr = random.choice(headerss)
@@ -83,7 +84,7 @@ def get_data(uid):
         tm.sleep(3)
         session = requests.Session()
         session.verify = False
-        retry = Retry(connect=500, backoff_factor=1)
+        retry = Retry(connect=1500, backoff_factor=1)
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
         session.mount('https://', adapter)
@@ -104,6 +105,7 @@ def get_data(uid):
                                             'class': 'a-section a-spacing-none review-views celwidget'})  # Whole review container
         if name_p or container is not None:
             name = name_p.text.strip()  # fetch name of product
+            '''
             p_names.append(name)
             uids.append(uid)
             titles.append(' ')
@@ -113,6 +115,9 @@ def get_data(uid):
             c_names.append(' ')
             url.append(' ')
             likes.append(' ')
+            
+            '''
+
             print('================== Getting data for ' + name + ' ==================')
             tm.sleep(3)
 
@@ -159,8 +164,8 @@ def get_data(uid):
                         dates.append(q_date.strftime("%d %b %Y"))
                         c_names.append(cus)
                         url.append('https://www.amazon.in' + link)
-                        uids.append(' ')
-                        p_names.append(' ')
+                        uids.append(uid)  # uids.append(' ')
+                        p_names.append(name)  # p_names.append(' ')
 
                         print('Rating : ' + rating)
 
@@ -184,16 +189,16 @@ def get_data(uid):
             c_names.append('= ERROR - 404 =')
             url.append('https://www.amazon.in/dp' + uid)
             uids.append(uid)
-            p_names.append(' ')
+            p_names.append('NA')
             return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
 
         # --------------------------------------- PAGE CONCEPT HERE ---------------------------------------
-        tm.sleep(3)
+        tm.sleep(1)
         if soup.find('li', attrs={'class': 'a-disabled a-last'}):
             flag = True
             print('//////END OF PAGES///////')
             return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
-        tm.sleep(5)
+        tm.sleep(1)
         if soup.find('li', attrs={'class': 'a-last'}):  # Check if there are more pages?
             no_pages += 1
         else:
@@ -311,9 +316,9 @@ def exception_mail(receiver):
 
 try:
     for t in range(1, len(asin) - 1):  # len(asin) - 1
-        if t % 2 == 0:
-            print('SLEEPING FOR : ' + str(4) + ' Seconds')
-            tm.sleep(4)
+        if t % 10 == 0:
+            print('SLEEPING FOR : ' + str(2) + ' Seconds')
+            tm.sleep(2)
         print('==== REVIEWS ====|||||||| PRODUCT NO : ' + str(t) + ' ||||||||')
 
         unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls = get_data(asin[t])
@@ -322,15 +327,17 @@ try:
                     'Question Date': datess, 'Title': titless, 'Rating': ratingss,
                     'Review': reviewss, 'Likes': likess, 'URL': urls}
     df = pd.DataFrame(dict)
-    df.to_csv('./questions.csv', index=False, encoding='utf-8')
+    print(
+        '=============================================            PRINTING FILE       =============================================')
+    df.to_csv('C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv', index=False, encoding='utf-8')
 
-    for t in range(1, len(receiver_email)):  # len(asin) - 1
+    for t in range(0, len(receiver_email)-1):  # len(asin) - 1
         print('|||||||| SENDING MAIL TO : ' + str(receiver_email[t]) + ' ||||||||')
     send_mail(receiver_email)
 
 except requests.exceptions.ConnectionError:
     df_temp = pd.DataFrame(dict)
-    df_temp.to_csv('./reviews.csv', index=False, encoding='utf-8')
+    df_temp.to_csv('C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv', index=False, encoding='utf-8')
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
     mailid = ['utkarsh.kharayat@havells.com',
