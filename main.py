@@ -177,7 +177,15 @@ def get_data(uid):
                         return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
             else:
                 print(name)
+                likes.append(' ')
                 c_names.append('100')
+                titles.append(' ')
+                ratings.append(' ')
+                reviews.append(' ')
+                dates.append(' ')
+                url.append(' ')
+                uids.append(' ')  # uids.append(' ')
+                p_names.append(' ')  # p_names.append(' ')
                 print("================ NO REVIEWS ================")
                 return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
         else:
@@ -189,6 +197,7 @@ def get_data(uid):
             ratings.append('0')
             reviews.append('PAGE DOES NOT EXIST')
             dates.append('NA')
+            titles.append(' - ')
             c_names.append('= ERROR - 404 =')
             url.append('https://www.amazon.in/dp/' + uid)
             uids.append(uid)
@@ -211,16 +220,15 @@ def get_data(uid):
 
 def send_mail(receiver):
     sender_email = 'utkarsh.kharayat@havells.com'
-    subject = "*AUTOMATED* Daily Amazon report *TEST*"
+    subject = '*AUTOMATED*' + str(curr_dat.strftime("%d %b %Y")) + 'Daily Amazon report *TEST*'
     body = """
     <html>
       <body style="text-align: center; color: blue;">
         <p>************ Automated Mail for daily Amazon feedback ************<br>
            Find attached CSV files.<br><br>
-           Questions    -   30 Days
-           Reviews      -   07 Days
-           Ratings      -   N/A
-           *****    DO     -   NOT   -    REPLY   *****
+           Questions    -   01 Days<br>
+           Reviews      -   01 Days<br>
+           Ratings      -   Historic<br>
         </p>
       </body>
     </html>
@@ -245,7 +253,7 @@ def send_mail(receiver):
         # Encode file in ASCII characters to send by email
         encoders.encode_base64(part)
         splits = filename[f].split('/')
-        name = splits[len(splits) - 1]
+        name = str(curr_dat.strftime("%d %b %Y")) + splits[len(splits) - 1]
         # Add header as key/value pair to attachment part
         part.add_header(
             "Content-Disposition",
@@ -269,13 +277,12 @@ def exception_mail(receiver):
     print('++++++++++++++++++++++++++ EXCEPTION MAIL TRIGGERED - ' + str(
         dt.today()) + ' ++++++++++++++++++++++++++')
     sender_email = 'utkarsh.kharayat@havells.com'
-    subject = "*AUTOMATED* Exception occurred - Reviews"
+    subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Exception occurred - Reviews'
     body = """
     <html>
       <body style="text-align: center; color: red;">
         <p>************ Automated Mail for Exception ************<br>
            Exception occurred while executing Review Scraper.<br><br>
-           *****    DO     -   NOT   -    REPLY   *****
         </p>
       </body>
     </html>
@@ -300,7 +307,8 @@ def exception_mail(receiver):
         # Encode file in ASCII characters to send by email
         encoders.encode_base64(part)
         splits = filename[f].split('/')
-        name = splits[len(splits) - 1]
+        name = str(curr_dat.strftime("%d %b %Y")) + splits[len(splits) - 1]
+        print(name)
         # Add header as key/value pair to attachment part
         part.add_header(
             "Content-Disposition",
@@ -338,7 +346,7 @@ try:
         '=============================================            PRINTING FILE       =============================================')
     df.to_csv('C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv', index=False, encoding='utf-8')
 
-    for t in range(0, len(receiver_email) - 1):  # len(asin) - 1
+    for t in range(0, len(receiver_email)):  # len(asin) - 1
         print('|||||||| SENDING MAIL TO : ' + str(receiver_email[t]) + ' ||||||||')
     send_mail(receiver_email)
 
