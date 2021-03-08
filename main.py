@@ -60,6 +60,7 @@ with open(
 
 curr_dat = dt.today()  # Current system date
 day_diff = timedelta(int(time_prd))
+day_diff_logic = timedelta(int(time_prd)+1)
 print("Fetch data from after :", (curr_dat - day_diff).strftime("%d-%b-%Y"))
 
 asin.pop(0)
@@ -106,7 +107,7 @@ def get_data(uid):
                                   'data-hook': 'product-link'}, href=True)
         container = soup.find('div', attrs={'id': 'cm_cr-review_list',
                                             'class': 'a-section a-spacing-none review-views celwidget'})  # Whole review container
-        if name_p or container is not None:
+        if name_p and container is not None:
             name = name_p.text.strip()  # fetch name of product
             '''
             p_names.append(name)
@@ -134,8 +135,8 @@ def get_data(uid):
                     dte = str(temp[4]) + ' ' + str(temp[5]) + ' ' + str(temp[6])
                     # print(formatted)
                     q_date = dt.strptime(dte, '%d %B %Y')  # Convert string to Date
-                    if (curr_dat - day_diff) <= q_date:
-
+                    if (curr_dat - day_diff_logic) <= q_date:
+                        # 7 <= 7
                         t_title = r.find('a', attrs={'data-hook': "review-title"}, href=True)
                         title = t_title.find('span').text.strip()
                         cus = r.find('span', attrs={'class': 'a-profile-name'}).text.strip()
@@ -172,7 +173,7 @@ def get_data(uid):
 
                         print('Rating : ' + rating)
 
-                    elif q_date < (curr_dat - day_diff):
+                    elif q_date < (curr_dat - day_diff_logic):
                         print('------------------ Date Expired ------------------')
                         return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
             else:
@@ -221,20 +222,20 @@ def get_data(uid):
 
 def send_mail(receiver, count_rev, count_rat, count_que):
     sender_email = 'utkarsh.kharayat@havells.com'
-    subject = '*AUTOMATED*' + str(curr_dat.strftime("%d %b %Y")) + 'Daily Amazon report *TEST*'
+    subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Daily Amazon report *TEST*'
     body = """
     <html>
       <body style="text-align: center; color: blue;">
         <p>************ Automated Mail for daily Amazon feedback ************<br>
         <p style="text-align: center; color: red;">
         """ + str(curr_dat.strftime("%d %b %Y")) + """ <br>
-        Time Period : """ + str(time_prd) + """ Days
+        Time Period : """ + str(time_prd) + """ Days <br>
         Fetch data from after : """ + str((curr_dat - day_diff).strftime("%d-%b-%Y")) + """
         <br><br></p>
            Find attached CSV files.<br><br>
            Questions    -   """ + str(count_que) + """ Entries <br>
-           Reviews      -   """ + str(count_rev) + """ Entries<br>
-           Ratings      -   """ + str(count_rat) + """ Entries<br>
+           Reviews      -   """ + str(count_rev) + """ Entries <br>
+           Ratings      -   """ + str(count_rat) + """ Entries <br>
         </p>
       </body>
     </html>
@@ -247,9 +248,9 @@ def send_mail(receiver, count_rev, count_rat, count_que):
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/rev_scraper/ratings.csv")
-    filename.append("C:/Users/33669/PycharmProjects/amzn_scraper/questions.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -272,6 +273,7 @@ def send_mail(receiver, count_rev, count_rat, count_que):
     context = ssl.create_default_context()
 
     for destination in receiver:
+        print('|||||||| SENDING MAIL TO : ' + destination + ' ||||||||')
         with smtplib.SMTP('smtp.havells.com', 2521) as server:
             server.ehlo()  # Can be omitted
             server.starttls(context=context)
@@ -283,11 +285,11 @@ def exception_mail(receiver):
     print('++++++++++++++++++++++++++ EXCEPTION MAIL TRIGGERED - ' + str(
         dt.today()) + ' ++++++++++++++++++++++++++')
     sender_email = 'utkarsh.kharayat@havells.com'
-    subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Exception occurred - Reviews'
+    subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Time-out occurred - Reviews'
     body = """
     <html>
       <body style="text-align: center; color: red;">
-        <p>************ Automated Mail for Exception ************<br>
+        <p>************ Time-out  Mail for Exception ************<br>
            Exception occurred while executing Review Scraper.<br><br>
         </p>
       </body>
@@ -301,9 +303,9 @@ def exception_mail(receiver):
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/rev_scraper/ratings.csv")
-    filename.append("C:/Users/33669/PycharmProjects/amzn_scraper/questions.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -338,32 +340,33 @@ def exception_mail(receiver):
 def total_n():
     count_rev, count_rat, count_que = 0, 0, 0
     with open(
-            'C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv') as csv_file:  # Read headers for avoiding IP timeout
+            'C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv', errors="ignore") as csv_file:  # Read headers for avoiding IP timeout
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rev += 1
 
-    with open('C:/Users/33669/PycharmProjects/rev_scraper/ratings.csv') as csv_file:  # Read Asin values from the csv
+    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv', errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rat += 1
 
-    with open(
-            'C:/Users/33669/PycharmProjects/amzn_scraper/questions.csv') as file:  # Read emailIDs for the automated mail response
-        reader = csv.reader(file, delimiter=',')
+    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv', errors="ignore") as csv_file:  # Read Asin values from the csv
+        reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_que += 1
+
     return count_rev, count_rat, count_que
 
 
 try:
-    for t in range(1, len(asin) - 1):  # len(asin) - 1
+
+    for t in range(1, 3):  # len(asin) - 1
         if t % 10 == 0:
-            print('SLEEPING FOR : ' + str(2) + ' Seconds')
-            tm.sleep(5)
+            print('SLEEPING FOR : ' + str(3) + ' Seconds')
+            tm.sleep(3)
         print('==== REVIEWS ====|||||||| PRODUCT NO : ' + str(t) + ' ||||||||')
 
         unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls = get_data(asin[t])
@@ -374,20 +377,19 @@ try:
     df = pd.DataFrame(dict)
     print(
         '=============================================            PRINTING FILE       =============================================')
-    df.to_csv('C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv', index=False, encoding='utf-8')
+    df.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
+
     count_rev, count_rat, count_que = total_n()
-    for t in range(0, len(receiver_email)):  # len(asin) - 1
-        print('|||||||| SENDING MAIL TO : ' + str(receiver_email[t]) + ' ||||||||')
     send_mail(receiver_email, count_rev, count_rat, count_que)
 
 except requests.exceptions.ConnectionError:
     df_temp = pd.DataFrame(dict)
-    df_temp.to_csv('C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv', index=False, encoding='utf-8')
+    df_temp.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
     mailid = ['utkarsh.kharayat@havells.com',
-              # 'arush.agarwal@havells.com',
-              # 'atulkumar.bhatia@havells.com'
+              'arush.agarwal@havells.com',
+              'atulkumar.bhatia@havells.com'
               ]
     exception_mail(mailid)  # Send Exception mail
 except ssl.SSLCertVerificationError:
