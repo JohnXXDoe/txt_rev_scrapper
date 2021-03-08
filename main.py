@@ -23,9 +23,9 @@ from bs4 import BeautifulSoup
 requests.packages.urllib3.disable_warnings(
     requests.packages.urllib3.exceptions.InsecureRequestWarning)  # Suppress insecure warning
 # Email headers
-time_prd = 0
-receiver_email = []
-headerss = []
+time_prd = 0    # Time period storage variable
+receiver_email = []  # List for emails to be sent to
+headerss = []  # Store headers variable
 titles = []  # Title of the review
 likes = []  # No of likes on the review
 p_names = []  # product name
@@ -33,7 +33,7 @@ c_names = []  # customer name
 ratings = []  # customer rating
 dates = []  # product ratings
 reviews = []  # total reviews
-uids = []  # ASIN numbers of the prodcuts
+uids = []  # ASIN numbers of the products
 asin = []
 url = []
 
@@ -363,7 +363,7 @@ def total_n():
 
 try:
 
-    for t in range(1, 3):  # len(asin) - 1
+    for t in range(1, len(asin) - 1):  # len(asin) - 1
         if t % 10 == 0:
             print('SLEEPING FOR : ' + str(3) + ' Seconds')
             tm.sleep(3)
