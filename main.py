@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 requests.packages.urllib3.disable_warnings(
     requests.packages.urllib3.exceptions.InsecureRequestWarning)  # Suppress insecure warning
 # Email headers
-
+time_prd = 0
 receiver_email = []
 headerss = []
 titles = []  # Title of the review
@@ -52,7 +52,7 @@ with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/asin.csv') as csv_fil
     time_prd = asin[len(asin) - 1]
 
 with open(
-        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/contacts_file.csv') as file:  # Read emailIDs for the automated mail response
+        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/emails_t.csv') as file:  # Read emailIDs for the automated mail response
     reader = csv.reader(file, delimiter='\n')
     next(reader)  # Skip header row
     for email in reader:
@@ -60,7 +60,7 @@ with open(
 
 curr_dat = dt.today()  # Current system date
 day_diff = timedelta(int(time_prd))
-print("Fetch questions from after :", (curr_dat - day_diff).strftime("%d %b %Y"))
+print("Fetch data from after :", (curr_dat - day_diff).strftime("%d-%b-%Y"))
 
 asin.pop(0)
 asin.pop(1)
@@ -188,6 +188,7 @@ def get_data(uid):
                 p_names.append(' ')  # p_names.append(' ')
                 print("================ NO REVIEWS ================")
                 return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
+
         else:
             print("************** PAGE DOES NOT EXIST **************")
             print('https://www.amazon.in/product-reviews/' + str(
@@ -218,17 +219,22 @@ def get_data(uid):
             return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
 
 
-def send_mail(receiver):
+def send_mail(receiver, count_rev, count_rat, count_que):
     sender_email = 'utkarsh.kharayat@havells.com'
     subject = '*AUTOMATED*' + str(curr_dat.strftime("%d %b %Y")) + 'Daily Amazon report *TEST*'
     body = """
     <html>
       <body style="text-align: center; color: blue;">
         <p>************ Automated Mail for daily Amazon feedback ************<br>
+        <p style="text-align: center; color: red;">
+        """ + str(curr_dat.strftime("%d %b %Y")) + """ <br>
+        Time Period : """ + str(time_prd) + """ Days
+        Fetch data from after : """ + str((curr_dat - day_diff).strftime("%d-%b-%Y")) + """
+        <br><br></p>
            Find attached CSV files.<br><br>
-           Questions    -   01 Days<br>
-           Reviews      -   01 Days<br>
-           Ratings      -   Historic<br>
+           Questions    -   """ + str(count_que) + """ Entries <br>
+           Reviews      -   """ + str(count_rev) + """ Entries<br>
+           Ratings      -   """ + str(count_rat) + """ Entries<br>
         </p>
       </body>
     </html>
@@ -253,7 +259,7 @@ def send_mail(receiver):
         # Encode file in ASCII characters to send by email
         encoders.encode_base64(part)
         splits = filename[f].split('/')
-        name = str(curr_dat.strftime("%d %b %Y")) + splits[len(splits) - 1]
+        name = str(curr_dat.strftime("%d-%b-%Y ")) + splits[len(splits) - 1]
         # Add header as key/value pair to attachment part
         part.add_header(
             "Content-Disposition",
@@ -329,26 +335,50 @@ def exception_mail(receiver):
             server.sendmail(sender_email, destination, text)  # server.sendmail(text)
 
 
+def total_n():
+    count_rev, count_rat, count_que = 0, 0, 0
+    with open(
+            'C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv') as csv_file:  # Read headers for avoiding IP timeout
+        reader = csv.reader(csv_file, delimiter=',')
+        next(reader)  # Skip header row
+        for col in reader:
+            count_rev += 1
+
+    with open('C:/Users/33669/PycharmProjects/rev_scraper/ratings.csv') as csv_file:  # Read Asin values from the csv
+        reader = csv.reader(csv_file, delimiter=',')
+        next(reader)  # Skip header row
+        for col in reader:
+            count_rat += 1
+
+    with open(
+            'C:/Users/33669/PycharmProjects/amzn_scraper/questions.csv') as file:  # Read emailIDs for the automated mail response
+        reader = csv.reader(file, delimiter=',')
+        next(reader)  # Skip header row
+        for col in reader:
+            count_que += 1
+    return count_rev, count_rat, count_que
+
+
 try:
     for t in range(1, len(asin) - 1):  # len(asin) - 1
         if t % 10 == 0:
             print('SLEEPING FOR : ' + str(2) + ' Seconds')
-            tm.sleep(2)
+            tm.sleep(5)
         print('==== REVIEWS ====|||||||| PRODUCT NO : ' + str(t) + ' ||||||||')
 
         unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls = get_data(asin[t])
-        if cus_name != '100':
+        if cus_name != str(100):
             dict = {'ASIN': unique, 'Product Name': product_name, 'Customer Name': cus_name,
-                    'Question Date': datess, 'Title': titless, 'Rating': ratingss,
+                    'Review Date': datess, 'Title': titless, 'Rating': ratingss,
                     'Review': reviewss, 'Likes': likess, 'URL': urls}
     df = pd.DataFrame(dict)
     print(
         '=============================================            PRINTING FILE       =============================================')
     df.to_csv('C:/Users/33669/PycharmProjects/txt_rev_scrapper/reviews.csv', index=False, encoding='utf-8')
-
+    count_rev, count_rat, count_que = total_n()
     for t in range(0, len(receiver_email)):  # len(asin) - 1
         print('|||||||| SENDING MAIL TO : ' + str(receiver_email[t]) + ' ||||||||')
-    send_mail(receiver_email)
+    send_mail(receiver_email, count_rev, count_rat, count_que)
 
 except requests.exceptions.ConnectionError:
     df_temp = pd.DataFrame(dict)
@@ -356,8 +386,9 @@ except requests.exceptions.ConnectionError:
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
     mailid = ['utkarsh.kharayat@havells.com',
-              'arush.agarwal@havells.com',
-              'atulkumar.bhatia@havells.com']
+              # 'arush.agarwal@havells.com',
+              # 'atulkumar.bhatia@havells.com'
+              ]
     exception_mail(mailid)  # Send Exception mail
 except ssl.SSLCertVerificationError:
     print('////////////////////////////////// SSL Cerificate ISSUE - ' + str(
