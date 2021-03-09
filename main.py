@@ -208,7 +208,7 @@ def get_data(uid):
             except Exception:
                 print('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
                 print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error) +' OF 10 | | | | | |')
-                tm.sleep(15)
+                tm.sleep(120)
                 continue
 
         else:
