@@ -64,7 +64,6 @@ day_diff_logic = timedelta(int(time_prd) + 1)
 print("Fetch data from after :", (curr_dat - day_diff).strftime("%d-%b-%Y"))
 
 asin.pop(0)
-#asin.pop(1)
 print(asin)
 print(asin[1])
 
@@ -207,7 +206,7 @@ def get_data(uid):
                     raise Exception('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
             except Exception:
                 print('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
-                print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error) +' OF 10 | | | | | |')
+                print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error+1) +' OF 10 | | | | | |')
                 tm.sleep(120)
                 continue
 
@@ -255,9 +254,9 @@ def send_mail(receiver, count_rev, count_rat, count_que):
 
     message.attach(MIMEText(body, "html"))
     filename = []
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
     filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
     filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -372,6 +371,7 @@ def total_n():
 
 
 try:
+
     for t in range(1, len(asin) - 1):  # len(asin) - 1
         if t % 10 == 0:
             print('SLEEPING FOR : ' + str(0) + ' Seconds')

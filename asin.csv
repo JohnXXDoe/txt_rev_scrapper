@@ -1,4 +1,3 @@
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Sl No,ASIN,Product Title,Material Code,Sellable On Hand Units,Weeks On Hand,Sell-out last week,12 weeks sell-out,Forecast next week,26 weeks forecast,"PAN Havells WH stock in Hands 
 (Total)","PAN Havells WH stock in Hands 
 (Trade)","PAN Havells WH stock in Hands 
@@ -27,7 +26,6 @@ Source,AMZ - Inv report,AMZ - Inv report,Havells SAP,AMZ - Inv report,AMZ - Fore
 ,B07MHJ2YNP,Havells Fabio 1250-Watt Steam Iron (Blue),GHGSIBEB125,696,12,172,,56.227,,1515,,,,,,,,,,21,,,,0.00%,Trigger stock movement to CT WH,16,0,0,
 ,B00NLBK3BG,Havells Lifeline Cable WHFFDNRA14X0 4 sq mm Wire (Red),WHFFDNRA14X0,662,33,14,,24.725,,18223,,,,,,,,,,0,,,,0.55%,Trigger stock movement to CT WH,3,0,0,
 ,B06WRT58X5,Havells Maxx Grind 750 Watt Mixer Grinder with 3 Stainless Steel Jar and Overload indicator (Blue),GHFMGBKB075,624,5,137,,111.006,,6059,,,,,,,,,,0,,,,0.00%,Trigger stock movement to CT WH,33,0,0,
-,B075H1GCK2,"Havells Flagro Storage 6-Litre Gas Heater with Flexi Pipe, Safe Shock Plug (White)",GHWGFLSWH006,581,798,0,,1.946,,13675,,,,,,,,,,0,,,,�,Trigger stock movement to CT WH,2,128,0,
 ,B0787C2PNG,Havells ASPRO 500 Watt Mixer Grinder with 3 Stainless Steel Jar (White & Light Blue) with 5 year motor warranty,GHFMGAZB050,555,3,90,,186.177,,3641,,,,,,,,,,0,,,,0.00%,Trigger stock movement to CT WH,24,0,0,
 ,B00NLF14CO,Havells Era 1000-Watt Dry Iron (Grey/White),GHGDIARE100,539,10,0,,69.961,,7853,,,,,,,,,,0,,,,0.00%,Trigger stock movement to CT WH,4,4,535,
 ,B079ZX9XR7,Havells Stealth 1250mm Ceiling Fan (Indigo Blue),FHCSYSTIBL48,505,13,26,,36.901,,1510,,,,,,,,,,0,,,,19.84%,Trigger stock movement to CT WH,1,2,0,
@@ -650,7 +648,6 @@ Source,AMZ - Inv report,AMZ - Inv report,Havells SAP,AMZ - Inv report,AMZ - Fore
 ,B07B2BN3W6,Havells Life Line Plus S3 0.75 sq mm PVC HRFR Cable (Green),WHFFDNGL1X75,0,0,0,,0,,0,,,,,,,,,,0,,,,�,Trigger stock movement to CT WH,2,0,0,
 ,B079K54VVD,Havells Max 7-litres RO UV Water Purifier (Sea Green),#N/A,0,#N/A,#N/A,,#N/A,,0,,,,,,,,,,#N/A,,,,#N/A,Trigger stock movement to CT WH,1,0,0,
 ,B079K3BRJM,Havells Pro 8-litres RO UV Water Purifier (Blue),GHWRPPD015,0,0,0,,0,,1879,,,,,,,,,,0,,,,100.00%,Trigger stock movement to CT WH,0,0,0,
-,B078Y218R7,Standard Zoe Prime 10-Litre Geyser (White),GSWQZPTWH010,0,0,0,,0,,0,,,,,,,,,,0,,,,�,Trigger stock movement to CT WH,3,0,0,
 ,B078X67Y82,Standard Amazer 10-Litre Geyser (White/Blue),GSWEAZSWB010,0,0,0,,0,,843,,,,,,,,,,0,,,,0.00%,Trigger stock movement to CT WH,0,0,0,
 ,B078X656WK,Standard Lyft 3-Litre 3000-Watt Geyser (White),GSWALYPWH003,0,0,0,,0,,6,,,,,,,,,,0,,,,�,Trigger stock movement to CT WH,0,0,0,
 ,B078X5PPFL,Standard Ameo 15-Litre Geyser (White/Blue),GSWEAOSWB015,0,#N/A,#N/A,,#N/A,,64,,,,,,,,,,#N/A,,,,#N/A,Trigger stock movement to CT WH,1,0,0,
@@ -714,7 +711,6 @@ Source,AMZ - Inv report,AMZ - Inv report,Havells SAP,AMZ - Inv report,AMZ - Fore
 ,B01LS0IRJG,Havells Instanio 3-Litre Instant Water Heater (White/Blue),GHWAIAPWB003,0,0,0,,4,,6599,,,,,,,,,,0,,,,0.00%,Trigger stock movement to CT WH,1,0,0,
 ,B01HXW39UU,Havells Citrus Press 30-Watt Juicer (Black),GHFCJBHK003,0,0,0,,7,,6,,,,,,,,,,152,,,,100.00%,Trigger stock movement to CT WH,2,0,0,
 ,B01FOPB3JM,Havells Enticer 48' - (Pearl White Chrome),FHCENSTPWH48,0,0,0,,0,,7014,,,,,,,,,,0,,,,0.00%,Trigger stock movement to CT WH,4,0,0,
-,B0152VTJ2G,Havells Puro Plus 5S 15-Litre Storage Water Heater (White),GHWAPFTWH015,0,#N/A,#N/A,,#N/A,,1292,,,,,,,,,,#N/A,,,,#N/A,Trigger stock movement to CT WH,0,0,0,
 ,B0152VTDCC,"Havells Puro Plus 5S 25-Litre Storage Water Heater with Flexi Pipe, Safe Shock Plug (Ivory)",GHWAPFTIV025,0,0,0,,2,,361,,,,,,,,,,23,,,,100.00%,Trigger stock movement to CT WH,4,0,0,
 ,B00RTBRKJW,Havells Insta Cook ST-X Induction Cooktop,GHCICAYK200,0,0,4,,7,,27,,,,,,,,,,56,,,,73.89%,Trigger stock movement to CT WH,4,0,0,
 ,B00RGQ94DU,Havells Insta Cook PT 1600-Watt Induction Cooktop (Assorted Colors),GHCICBLK160,0,0,0,,28,,965,,,,,,,,,,263,,,,100.00%,Trigger stock movement to CT WH,1,0,0,
