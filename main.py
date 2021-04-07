@@ -38,13 +38,13 @@ asin = []
 url = []
 
 with open(
-        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/headers.csv') as csv_file:  # Read headers for avoiding IP timeout
+        'C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/txt_rev_scrapper/headers.csv') as csv_file:  # Read headers for avoiding IP timeout
     reader2 = csv.reader(csv_file, delimiter='\n')
     for col in reader2:
         header = col[0]
         headerss.append(header)
 
-with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/asin.csv') as csv_file:  # Read Asin values from the csv
+with open('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/txt_rev_scrapper/asin.csv') as csv_file:  # Read Asin values from the csv
     reader = csv.reader(csv_file, delimiter=',')
     for col in reader:
         asin_t = col[1]
@@ -52,7 +52,7 @@ with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/asin.csv') as csv_fil
     time_prd = asin[len(asin) - 1]
 
 with open(
-        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/emails_t.csv') as file:  # Read emailIDs for the automated mail response
+        'C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/txt_rev_scrapper/emails.csv') as file:  # Read emailIDs for the automated mail response
     reader = csv.reader(file, delimiter='\n')
     next(reader)  # Skip header row
     for email in reader:
@@ -74,12 +74,13 @@ def get_data(uid):
     no_pages = 1
     flag = False
     while flag is False:
-        for loading_error in range(10):
+        for loading_error in range(20):
             try:
                 if no_pages % 2 == 0:  # To sleep for avoiding timeouts
+                    sleep = random.randint(1,4)
                     print(
-                        'SLEEPING FOR : ' + str((no_pages / 2) * 10) + ' SECONDS.')
-                    tm.sleep(20 * (no_pages / 2))
+                        'SLEEPING FOR : ' + str(sleep) + ' SECONDS.')
+                    tm.sleep(sleep)
                 print(' ||| PAGE NUMBER - ' + str(no_pages) + ' |||')
                 hedr = random.choice(headerss)
                 headers = {"User-Agent": hedr,
@@ -207,7 +208,7 @@ def get_data(uid):
             except Exception:
                 print('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
                 print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error+1) +' OF 10 | | | | | |')
-                tm.sleep(120)
+                tm.sleep(random.randint(50,180))
                 continue
 
         else:
@@ -254,9 +255,9 @@ def send_mail(receiver, count_rev, count_rat, count_que):
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/questions.csv")
+    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/ratings.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -309,9 +310,9 @@ def exception_mail(receiver):
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
+    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/questions.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -346,21 +347,21 @@ def exception_mail(receiver):
 def total_n():
     count_rev, count_rat, count_que = 0, 0, 0
     with open(
-            'C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv',
+            'C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv',
             errors="ignore") as csv_file:  # Read headers for avoiding IP timeout
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rev += 1
 
-    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv',
+    with open('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/ratings.csv',
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rat += 1
 
-    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv',
+    with open('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/questions.csv',
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
@@ -371,7 +372,7 @@ def total_n():
 
 
 try:
-
+    #"""
     for t in range(1, len(asin) - 1):  # len(asin) - 1
         if t % 10 == 0:
             print('SLEEPING FOR : ' + str(0) + ' Seconds')
@@ -386,14 +387,14 @@ try:
     df = pd.DataFrame(dict)
     print(
         '=============================================            PRINTING FILE       =============================================')
-    df.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
-
+    df.to_csv('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
+    #"""
     count_rev, count_rat, count_que = total_n()
     send_mail(receiver_email, count_rev, count_rat, count_que)
 
 except requests.exceptions.ConnectionError:
     df_temp = pd.DataFrame(dict)
-    df_temp.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
+    df_temp.to_csv('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
     mailid = ['utkarsh.kharayat@havells.com',
