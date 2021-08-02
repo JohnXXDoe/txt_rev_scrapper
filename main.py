@@ -31,23 +31,26 @@ likes = []  # No of likes on the review
 p_names = []  # product name
 c_names = []  # customer name
 ratings = []  # customer rating
+dept = []
 dates = []  # product ratings
 reviews = []  # total reviews
 uids = []  # ASIN numbers of the products
 asin = []
 url = []
-
+cat = []
 with open(
-        'C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/txt_rev_scrapper/headers.csv') as csv_file:  # Read headers for avoiding IP timeout
+        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/headers.csv') as csv_file:  # Read headers for avoiding IP timeout
     reader2 = csv.reader(csv_file, delimiter='\n')
     for col in reader2:
         header = col[0]
         headerss.append(header)
 
-with open('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/txt_rev_scrapper/asin.csv') as csv_file:  # Read Asin values from the csv
+with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/asin.csv') as csv_file:  # Read Asin values from the csv
     reader = csv.reader(csv_file, delimiter=',')
     for col in reader:
         asin_t = col[1]
+        cat_t = col[3]
+        cat.append(cat_t)
         asin.append(asin_t)
     time_prd = asin[len(asin) - 1]
 
@@ -63,6 +66,7 @@ day_diff = timedelta(int(time_prd))
 day_diff_logic = timedelta(int(time_prd) + 1)
 print("Fetch data from after :", (curr_dat - day_diff).strftime("%d-%b-%Y"))
 
+cat.pop(0)
 asin.pop(0)
 print(asin)
 print(asin[1])
@@ -70,7 +74,7 @@ print(asin[1])
 print('Get ratings from : ', str(len(asin)) + ' products')
 
 
-def get_data(uid):
+def get_data(uid, catt):
     no_pages = 1
     flag = False
     while flag is False:
@@ -87,7 +91,7 @@ def get_data(uid):
                            "Accept-Encoding": "gzip, deflate",
                            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "DNT": "1",
                            "Connection": "close", "Upgrade-Insecure-Requests": "1"}
-                tm.sleep(3)
+                tm.sleep(1)
                 session = requests.Session()
                 session.verify = False
                 retry = Retry(connect=3000, backoff_factor=1)
@@ -120,11 +124,11 @@ def get_data(uid):
                     c_names.append(' ')
                     url.append(' ')
                     likes.append(' ')
-                    
+                    dept.append(catt)
                     '''
 
                     print('================== Getting data for ' + name + ' ==================')
-                    tm.sleep(3)
+                    tm.sleep(1)
 
                     if container is not None:
                         for r in container.findAll('div',
@@ -171,12 +175,13 @@ def get_data(uid):
                                 url.append('https://www.amazon.in' + link)
                                 uids.append(uid)  # uids.append(' ')
                                 p_names.append(name)  # p_names.append(' ')
+                                dept.append(catt)
 
                                 print('Rating : ' + rating)
 
                             elif q_date < (curr_dat - day_diff_logic):
                                 print('------------------ Date Expired ------------------')
-                                return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
+                                return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url, dept
                     else:
                         print(name)
                         likes.append(' ')
@@ -188,8 +193,9 @@ def get_data(uid):
                         url.append(' ')
                         uids.append(' ')  # uids.append(' ')
                         p_names.append(' ')  # p_names.append(' ')
+                        dept.append(catt)
                         print("================ NO REVIEWS ================")
-                        return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
+                        return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url, dept
 
                     # --------------------------------------- PAGE CONCEPT HERE ---------------------------------------
                     tm.sleep(1)
@@ -197,7 +203,6 @@ def get_data(uid):
                         flag = True
                         print('//////END OF PAGES///////')
                         return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
-                    tm.sleep(1)
                     if soup.find('li', attrs={'class': 'a-last'}):  # Check if there are more pages?
                         no_pages += 1
                     else:
@@ -207,7 +212,7 @@ def get_data(uid):
                     raise Exception('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
             except Exception:
                 print('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
-                print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error+1) +' OF 10 | | | | | |')
+                print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error+1) +' OF 20 | | | | | |')
                 tm.sleep(random.randint(50,180))
                 continue
 
@@ -225,11 +230,12 @@ def get_data(uid):
             url.append('https://www.amazon.in/dp/' + uid)
             uids.append(uid)
             p_names.append('NA')
-            return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
+            dept.append(catt)
+            return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url, dept
 
 def send_mail(receiver, count_rev, count_rat, count_que):
     sender_email = 'utkarsh.kharayat@havells.com'
-    subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Daily Amazon report *TEST*'
+    subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Daily Amazon report '
     body = """
     <html>
       <body style="text-align: center; color: blue;">
@@ -243,6 +249,7 @@ def send_mail(receiver, count_rev, count_rat, count_que):
            Questions    -   """ + str(count_que) + """ Entries <br>
            Reviews      -   """ + str(count_rev) + """ Entries <br>
            Ratings      -   """ + str(count_rat) + """ Entries <br>
+           *THIS EMAIL IS NOT MONITORED AND IS AUTO GENERATED*
         </p>
       </body>
     </html>
@@ -255,9 +262,9 @@ def send_mail(receiver, count_rev, count_rat, count_que):
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/questions.csv")
-    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -310,9 +317,9 @@ def exception_mail(receiver):
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/ratings.csv")
-    filename.append("C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/questions.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -347,21 +354,21 @@ def exception_mail(receiver):
 def total_n():
     count_rev, count_rat, count_que = 0, 0, 0
     with open(
-            'C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv',
+            'C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv',
             errors="ignore") as csv_file:  # Read headers for avoiding IP timeout
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rev += 1
 
-    with open('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/ratings.csv',
+    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv',
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rat += 1
 
-    with open('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/questions.csv',
+    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv',
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
@@ -376,25 +383,25 @@ try:
     for t in range(1, len(asin) - 1):  # len(asin) - 1
         if t % 10 == 0:
             print('SLEEPING FOR : ' + str(0) + ' Seconds')
-            tm.sleep(0)
+            tm.sleep(2)
         print('==== REVIEWS ====|||||||| PRODUCT NO : ' + str(t) + ' ||||||||')
 
-        unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls = get_data(asin[t])
+        unique, product_name, cus_name, datess, titless, ratingss, reviewss, likess, urls, dept = get_data(asin[t], cat[t])
         if cus_name != str(100):
-            dict = {'ASIN': unique, 'Product Name': product_name, 'Customer Name': cus_name,
+            dict = {'ASIN': unique, 'Department': dept, 'Product Name': product_name, 'Customer Name': cus_name,
                     'Review Date': datess, 'Title': titless, 'Rating': ratingss,
                     'Review': reviewss, 'Likes': likess, 'URL': urls}
     df = pd.DataFrame(dict)
     print(
         '=============================================            PRINTING FILE       =============================================')
-    df.to_csv('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
+    df.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
     #"""
     count_rev, count_rat, count_que = total_n()
     send_mail(receiver_email, count_rev, count_rat, count_que)
 
 except requests.exceptions.ConnectionError:
     df_temp = pd.DataFrame(dict)
-    df_temp.to_csv('C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
+    df_temp.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/error_reviews.csv', index=False, encoding='utf-8')
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
     mailid = ['utkarsh.kharayat@havells.com',
