@@ -202,12 +202,12 @@ def get_data(uid, catt):
                     if soup.find('li', attrs={'class': 'a-disabled a-last'}):
                         flag = True
                         print('//////END OF PAGES///////')
-                        return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
+                        return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url, dept
                     if soup.find('li', attrs={'class': 'a-last'}):  # Check if there are more pages?
                         no_pages += 1
                     else:
                         print('SINGLE PAGE ONLY')
-                        return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url
+                        return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url, dept
                 else:
                     raise Exception('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
             except Exception:
