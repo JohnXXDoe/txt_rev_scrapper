@@ -234,7 +234,7 @@ def get_data(uid, catt):
             return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url, dept
 
 def send_mail(receiver, count_rev, count_rat, count_que):
-    sender_email = 'utkarsh.kharayat@havells.com'
+    sender_email = 'utkarsh.kharayat@abc.com'
     subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Daily Amazon report '
     body = """
     <html>
@@ -262,9 +262,9 @@ def send_mail(receiver, count_rev, count_rat, count_que):
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/questions.csv")
+    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/ratings.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -288,7 +288,7 @@ def send_mail(receiver, count_rev, count_rat, count_que):
 
     for destination in receiver:
         print('|||||||| SENDING MAIL TO : ' + destination + ' ||||||||')
-        with smtplib.SMTP('smtp.havells.com', 2521) as server:
+        with smtplib.SMTP('smtp.abcd.com', 21321) as server:
             server.ehlo()  # Can be omitted
             server.starttls(context=context)
             server.ehlo()  # Can be omitted
@@ -310,16 +310,16 @@ def exception_mail(receiver):
     </html>
     """
     message = MIMEMultipart()
-    message["From"] = 'Utkarsh Kharayat <utkarsh.kharayat@havells.com>'
+    message["From"] = 'Utkarsh Kharayat <utkarsh.kharayat@abc.com>'
     message["To"] = sender_email
     message["Subject"] = subject
     # message["BCC"] = receiver
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv")
-    filename.append("C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv")
+    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv")
+    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/ratings.csv")
+    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/questions.csv")
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -354,21 +354,21 @@ def exception_mail(receiver):
 def total_n():
     count_rev, count_rat, count_que = 0, 0, 0
     with open(
-            'C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv',
+            'C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv',
             errors="ignore") as csv_file:  # Read headers for avoiding IP timeout
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rev += 1
 
-    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/ratings.csv',
+    with open('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/ratings.csv',
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rat += 1
 
-    with open('C:/Users/33669/PycharmProjects/Outputs/Scraper/questions.csv',
+    with open('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/questions.csv',
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
@@ -394,19 +394,19 @@ try:
     df = pd.DataFrame(dict)
     print(
         '=============================================            PRINTING FILE       =============================================')
-    df.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
+    df.to_csv('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
     #"""
     count_rev, count_rat, count_que = total_n()
     send_mail(receiver_email, count_rev, count_rat, count_que)
 
 except requests.exceptions.ConnectionError:
     df_temp = pd.DataFrame(dict)
-    df_temp.to_csv('C:/Users/33669/PycharmProjects/Outputs/Scraper/error_reviews.csv', index=False, encoding='utf-8')
+    df_temp.to_csv('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/error_reviews.csv', index=False, encoding='utf-8')
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
-    mailid = ['utkarsh.kharayat@havells.com',
-              'arush.agarwal@havells.com',
-              'atulkumar.bhatia@havells.com'
+    mailid = ['utkarsh.kharayat@abc.com',
+              '2@abc.com',
+              '3@abc.com'
               ]
     exception_mail(mailid)  # Send Exception mail
 except ssl.SSLCertVerificationError:
