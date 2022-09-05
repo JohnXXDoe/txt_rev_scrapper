@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 from email.headerregistry import Address
 from email.header import Header
 from email.utils import formataddr
-
+import os
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 import random
@@ -38,28 +38,38 @@ uids = []  # ASIN numbers of the products
 asin = []
 url = []
 cat = []
-with open(
-        'C:/Users/33669/PycharmProjects/txt_rev_scrapper/headers.csv') as csv_file:  # Read headers for avoiding IP timeout
+curr_dat = dt.today().strftime('%b-%d_%H-%M')
+
+header_path = 'C:/Users/33669/OneDrive - Havells/Scrape_Data/Inputs/headers.csv'
+email_path = 'C:/Users/33669/OneDrive - Havells/Scrape_Data/Inputs/qa_emails.csv'
+asin_path = 'C:/Users/33669/OneDrive - Havells/Scrape_Data/Inputs/asin.csv'
+out_path_error = 'C:/Users/33669/OneDrive - Havells/Scrape_Data/Outputs/error_reviews.csv'
+out_path_main = 'C:/Users/33669/OneDrive - Havells/Scrape_Data/Outputs/reviews.csv'
+out_path_questions = 'C:/Users/33669/OneDrive - Havells/Scrape_Data/Outputs/questions.csv'
+out_path_ratings = 'C:/Users/33669/OneDrive - Havells/Scrape_Data/Outputs/ratings.csv'
+
+with open(header_path) as csv_file:  # Read headers for avoiding IP timeout
     reader2 = csv.reader(csv_file, delimiter='\n')
     for col in reader2:
         header = col[0]
         headerss.append(header)
 
-with open('C:/Users/33669/PycharmProjects/txt_rev_scrapper/asin.csv') as csv_file:  # Read Asin values from the csv
-    reader = csv.reader(csv_file, delimiter=',')
+with open(asin_path) as csv_file:  # Read Asin values from the csv
+    reader = csv.reader(csv_file, delimiter=',')    
     for col in reader:
-        asin_t = col[1]
-        cat_t = col[3]
+        asin_t = col[0]
+        cat_t = col[2]
         cat.append(cat_t)
         asin.append(asin_t)
     time_prd = asin[len(asin) - 1]
 
-with open(
-        'C:/Users/33669/PycharmProjects/B2C_Scraper/Amazon/txt_rev_scrapper/emails.csv') as file:  # Read emailIDs for the automated mail response
+with open(email_path) as file:  # Read emailIDs for the automated mail response
     reader = csv.reader(file, delimiter='\n')
     next(reader)  # Skip header row
     for email in reader:
         receiver_email.append(email[0])
+        print(email[0])
+        
 
 curr_dat = dt.today()  # Current system date
 day_diff = timedelta(int(time_prd))
@@ -69,19 +79,21 @@ print("Fetch data from after :", (curr_dat - day_diff).strftime("%d-%b-%Y"))
 cat.pop(0)
 asin.pop(0)
 print(asin)
-print(asin[1])
+print(asin[0])
 
-print('Get ratings from : ', str(len(asin)) + ' products')
+print('============================================================================================================')
+print('\n\nGet reviews from : ', str(len(asin)) + ' products')
+print(f'\nTime period : {time_prd} days\n')
 
 
 def get_data(uid, catt):
     no_pages = 1
     flag = False
     while flag is False:
-        for loading_error in range(20):
+        for loading_error in range(10):
             try:
                 if no_pages % 2 == 0:  # To sleep for avoiding timeouts
-                    sleep = random.randint(1,4)
+                    sleep = random.randint(2,5)
                     print(
                         'SLEEPING FOR : ' + str(sleep) + ' SECONDS.')
                     tm.sleep(sleep)
@@ -212,7 +224,7 @@ def get_data(uid, catt):
                     raise Exception('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
             except Exception:
                 print('| | | | | | PAGE LOAD ERROR / DOES NOT EXIST | | | | | |')
-                print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error+1) +' OF 20 | | | | | |')
+                print('| | | | | | RETRYING ATTEMPT NUMBER : ' + str(loading_error+1) +' OF 10 | | | | | |')
                 tm.sleep(random.randint(50,180))
                 continue
 
@@ -234,7 +246,7 @@ def get_data(uid, catt):
             return uids, p_names, c_names, dates, titles, ratings, reviews, likes, url, dept
 
 def send_mail(receiver, count_rev, count_rat, count_que):
-    sender_email = 'utkarsh.kharayat@abc.com'
+    sender_email = 'amazonreport@havells.com'
     subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Daily Amazon report '
     body = """
     <html>
@@ -255,16 +267,16 @@ def send_mail(receiver, count_rev, count_rat, count_que):
     </html>
     """
     message = MIMEMultipart()
-    message["From"] = 'Utkarsh Kharayat <utkarsh.kharayat@havells.com>'
-    message["To"] = sender_email
+    message["From"] = 'AmazonWeeklyData <donotreply@havells.com>'
+    message["To"] = 'utkarsh.kharayat@havells.com'
     message["Subject"] = subject
     # message["BCC"] = receiver
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/questions.csv")
-    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/ratings.csv")
+    filename.append(out_path_questions)
+    filename.append(out_path_main)
+    filename.append(out_path_ratings)
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -298,7 +310,7 @@ def send_mail(receiver, count_rev, count_rat, count_que):
 def exception_mail(receiver):
     print('++++++++++++++++++++++++++ EXCEPTION MAIL TRIGGERED - ' + str(
         dt.today()) + ' ++++++++++++++++++++++++++')
-    sender_email = 'utkarsh.kharayat@havells.com'
+    sender_email = 'amazonreport@havells.com'
     subject = '*AUTOMATED* ' + str(curr_dat.strftime("%d %b %Y")) + ' Time-out occurred - Reviews'
     body = """
     <html>
@@ -310,16 +322,16 @@ def exception_mail(receiver):
     </html>
     """
     message = MIMEMultipart()
-    message["From"] = 'Utkarsh Kharayat <utkarsh.kharayat@abc.com>'
-    message["To"] = sender_email
+    message["From"] = 'AmazonExceptions <amazonreport@havells.com>'
+    message["To"] = 'utkarsh.kharayat@havells.com'
     message["Subject"] = subject
     # message["BCC"] = receiver
 
     message.attach(MIMEText(body, "html"))
     filename = []
-    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv")
-    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/ratings.csv")
-    filename.append("C:/Users/XXXX/PycharmProjects/Outputs/Scraper/questions.csv")
+    filename.append(out_path_ratings)
+    filename.append(out_path_main)
+    filename.append(out_path_questions)
     for f in range(0, len(filename)):
         with open(filename[f], "rb") as attachment:
             # Add file as application/octet-stream
@@ -353,22 +365,21 @@ def exception_mail(receiver):
 
 def total_n():
     count_rev, count_rat, count_que = 0, 0, 0
-    with open(
-            'C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv',
+    with open(out_path_main,
             errors="ignore") as csv_file:  # Read headers for avoiding IP timeout
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rev += 1
 
-    with open('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/ratings.csv',
+    with open(out_path_ratings,
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
         for col in reader:
             count_rat += 1
 
-    with open('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/questions.csv',
+    with open(out_path_questions,
               errors="ignore") as csv_file:  # Read Asin values from the csv
         reader = csv.reader(csv_file, delimiter=',')
         next(reader)  # Skip header row
@@ -379,8 +390,8 @@ def total_n():
 
 
 try:
-    #"""
-    for t in range(1, len(asin) - 1):  # len(asin) - 1
+    
+    for t in range(0, len(asin) - 1):  # len(asin) - 1
         if t % 10 == 0:
             print('SLEEPING FOR : ' + str(0) + ' Seconds')
             tm.sleep(2)
@@ -392,21 +403,22 @@ try:
                     'Review Date': datess, 'Title': titless, 'Rating': ratingss,
                     'Review': reviewss, 'Likes': likess, 'URL': urls}
     df = pd.DataFrame(dict)
+    final = df[df['Review'].str.contains('Your browser does not support HTML5 video')==False].reset_index()
+    final.drop_duplicates(subset = ['Review'], inplace = True)
+    #df = final.drop(['level_0'], axis = 1, inplace=True)
     print(
         '=============================================            PRINTING FILE       =============================================')
-    df.to_csv('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/reviews.csv', index=False, encoding='utf-8')
-    #"""
+    final.to_csv(out_path_main, index=False, encoding='utf-8')
+    
     count_rev, count_rat, count_que = total_n()
     send_mail(receiver_email, count_rev, count_rat, count_que)
 
 except requests.exceptions.ConnectionError:
     df_temp = pd.DataFrame(dict)
-    df_temp.to_csv('C:/Users/XXXX/PycharmProjects/Outputs/Scraper/error_reviews.csv', index=False, encoding='utf-8')
+    df_temp.to_csv(out_path_error, index=False, encoding='utf-8')
     print('////////////////////////////////// Connection refused - ' + str(
         dt.today()) + ' //////////////////////////////////')
-    mailid = ['utkarsh.kharayat@abc.com',
-              '2@abc.com',
-              '3@abc.com'
+    mailid = ['utkarsh.kharayat@havells.com'
               ]
     exception_mail(mailid)  # Send Exception mail
 except ssl.SSLCertVerificationError:
